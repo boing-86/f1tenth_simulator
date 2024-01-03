@@ -27,7 +27,7 @@ update_pose_rate: 0.001
 
 # Lidar simulation parameters
 scan_beams: 1080
-scan_field_of_view: 6.2831853 #4.71 # radians
+scan_field_of_view: 4.71239 # radians 270 degree
 
 
 # The distance from the center of the
@@ -47,7 +47,7 @@ map_free_threshold: 0.8
 ttc_threshold: 0.01
 
 # Indices for mux controller
-mux_size: 5
+mux_size: 7
 joy_mux_idx: 0
 key_mux_idx: 1
 random_walker_mux_idx: 2
@@ -55,7 +55,8 @@ brake_mux_idx: 3
 nav_mux_idx: 4
 # **Add index for new planning method here**
 # **(increase mux_size accordingly)**
-new_method_mux_idx: -1
+reactive_mux_idx: 5
+map_mux_idx: 6
 
 # Enables joystick if true
 joy: true
@@ -63,23 +64,26 @@ joy: true
 joy_speed_axis: 1
 joy_angle_axis: 3
 joy_max_speed: 2. # meters/second
+
 # Joystick indices for toggling mux
 joy_button_idx: 4  # LB button
-key_button_idx: 6 # not sure 
+key_button_idx: 6 # Back button
 brake_button_idx: 0 # A button
-random_walk_button_idx: 1 # ? button
-nav_button_idx: 5 # RB button
+# random_walk_button_idx: 1 # ? button
+# nav_button_idx: 5 # RB button
 # **Add button for new planning method here**
-new_button_idx: -1
+reactive_button_idx: 7
+
 
 # Keyboard characters for toggling mux
 joy_key_char: "j"
 keyboard_key_char: "k"
 brake_key_char: "b"
-random_walk_key_char: "r"
-nav_key_char: "n"
+# random_walk_key_char: "r"
+# nav_key_char: "n"
 # **Add button for new planning method here**
-new_key_char: "z"
+reactive_key_char: "r"
+map_key_char: "m"
 
 # Keyboard driving params
 keyboard_speed: 1.8  # meters/second
@@ -102,6 +106,8 @@ pose_rviz_topic: "/initialpose"
 keyboard_topic: "/key"
 brake_bool_topic: "/brake_bool"
 mux_topic: "/mux"
+reactive_topic: "/reactive/wallfollower/ackermann_cmd"
+map_based_topic: "/purepursuit/ackermann_cmd"
 
 # Topic names of various drive channels
 rand_drive_topic: "/rand_drive"
