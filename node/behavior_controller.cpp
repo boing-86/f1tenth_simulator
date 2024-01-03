@@ -356,10 +356,10 @@ public:
         } else if (msg.data == nav_key_char) {
             // nav
             toggle_mux(nav_mux_idx, "Navigation");
-        } elseif (mss.data == reactive_key_char) {
+        } else if (msg.data == reactive_key_char) {
             // reactive
             toggle_mux(reactive_mux_idx, "Reactive");
-        } elseif (mss.data == map_based_key_char) {
+        } else if (msg.data == map_based_key_char) {
             // map based
             toggle_mux(map_based_mux_idx, "Map Based");
         }

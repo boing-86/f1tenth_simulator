@@ -62,6 +62,7 @@ public:
 
         // get topic names
         std::string drive_topic, mux_topic, joy_topic, key_topic;
+        std::string reactive_topic, map_based_topic;
         n.getParam("drive_topic", drive_topic);
         n.getParam("mux_topic", mux_topic);
         n.getParam("joy_topic", joy_topic);
