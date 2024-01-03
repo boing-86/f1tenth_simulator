@@ -21,6 +21,8 @@ private:
     // Listen for messages from joystick and keyboard
     ros::Subscriber joy_sub;
     ros::Subscriber key_sub;
+    ros::Subscriber reactive_sub;
+    ros::Subscriber map_based_sub;
 
     // Publish drive data to simulator/car
     ros::Publisher drive_pub;
@@ -28,6 +30,8 @@ private:
     // Mux indices
     int joy_mux_idx;
     int key_mux_idx;
+    int reactive_mux_idx;
+    int map_based_mux_idx;
 
     // Mux controller array
     std::vector<bool> mux_controller;
@@ -62,6 +66,8 @@ public:
         n.getParam("mux_topic", mux_topic);
         n.getParam("joy_topic", joy_topic);
         n.getParam("keyboard_topic", key_topic);
+        n.getParam("reactive_topic", reactive_topic);
+        n.getParam("map_based_topic", map_based_topic);
 
         // Make a publisher for drive messages
         drive_pub = n.advertise<ackermann_msgs::AckermannDriveStamped>(drive_topic, 10);
@@ -73,9 +79,14 @@ public:
         joy_sub = n.subscribe(joy_topic, 1, &Mux::joy_callback, this);
         key_sub = n.subscribe(key_topic, 1, &Mux::key_callback, this);
 
+        reactive_sub = n.subscribe(reactive_topic, 1, &Mux::reactive_callback, this);
+        map_based_sub = n.subscribe(map_based_topic, 1, &Mux::map_based_callback, this);
+
         // get mux indices
         n.getParam("joy_mux_idx", joy_mux_idx);
         n.getParam("key_mux_idx", key_mux_idx);
+        n.getParam("reactive_mux_idx", reactive_mux_idx);
+        n.getParam("map_based_mux_idx", map_based_mux_idx);
 
         // get params for joystick calculations
         n.getParam("joy_speed_axis", joy_speed_axis);
@@ -129,6 +140,17 @@ public:
         // n.getParam("new_drive_topic", new_drive_topic);
         // n.getParam("new_mux_idx", new_mux_idx);
         // add_channel(new_drive_topic, drive_topic, new_mux_idx);
+
+        int reactive_mux_idx;
+        n.getParam("reactive_drive_topic", reactive_drive_topic);
+        n.getParam("reactive_mux_idx", reactive_mux_idx);
+        add_channel(reactive_drive_topic, drive_topic, reactive_mux_idx);
+
+        int map_based_mux_idx;
+        n.getParam("map_based_drive_topic", map_based_drive_topic);
+        n.getParam("map_based_mux_idx", map_based_mux_idx);
+        add_channel(map_based_drive_topic, drive_topic, map_based_mux_idx);
+
     }
 
     void add_channel(std::string channel_name, std::string drive_topic, int mux_idx_) {
@@ -182,6 +204,22 @@ public:
         if (!anything_on) {
             // if no mux channel is active, halt the car
             publish_to_drive(0.0, 0.0);
+        }
+    }
+
+    void reactive_callback(const ackermann_msgs::AckermannDriveStamped & msg) {
+
+        if (mux_controller[reactive_mux_idx]) {
+            ROS_INFO_STREAM("reactive_method callback");
+            publish_to_drive(msg.drive.speed, msg.drive.steering_angle);
+        }
+    }
+
+    void map_based_callback(const ackermann_msgs::AckermannDriveStamped & msg) {
+
+        if (mux_controller[map_based_mux_idx]) {
+            ROS_INFO_STREAM("map based method callback");
+            publish_to_drive(msg.drive.speed, msg.drive.steering_angle);
         }
     }
 

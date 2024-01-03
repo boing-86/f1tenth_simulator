@@ -40,6 +40,8 @@ private:
     int brake_mux_idx;
     // ***Add mux index for new planner here***
     // int new_mux_idx;
+    int reactive_mux_idx;
+    int map_based_mux_idx;
 
     // Mux controller array
     std::vector<bool> mux_controller;
@@ -62,6 +64,8 @@ private:
     std::string nav_key_char;
     // ***Add key char for new planner here***
     // int new_key_char;
+    std::string reactive_key_char;
+    std::string map_based_key_char;
 
     // Is ebrake on? (not engaged, but on)
     bool safety_on;
@@ -92,6 +96,7 @@ public:
 
         // get topic names
         std::string scan_topic, odom_topic, imu_topic, joy_topic, keyboard_topic, brake_bool_topic, mux_topic;
+        std::string reactive_topic, map_based_topic;
         n.getParam("scan_topic", scan_topic);
         n.getParam("odom_topic", odom_topic);
         n.getParam("imu_topic", imu_topic);
@@ -99,6 +104,8 @@ public:
         n.getParam("mux_topic", mux_topic);
         n.getParam("keyboard_topic", keyboard_topic);
         n.getParam("brake_bool_topic", brake_bool_topic);
+        n.getParam("reactive_topic", reactive_topic);
+        n.getParam("map_based_topic", map_based_topic);
 
         // Make a publisher for mux messages
         mux_pub = n.advertise<std_msgs::Int32MultiArray>(mux_topic, 10);
@@ -119,6 +126,8 @@ public:
         n.getParam("nav_mux_idx", nav_mux_idx);
         // ***Add mux index for new planner here***
         // n.getParam("new_mux_idx", new_mux_idx);
+        n.getParam("reactive_mux_idx", reactive_mux_idx);
+        n.getParam("map_based_mux_idx", map_based_mux_idx);
 
         // Get button indices
         n.getParam("joy_button_idx", joy_button_idx);
@@ -137,9 +146,12 @@ public:
         n.getParam("nav_key_char", nav_key_char);
         // ***Add key char for new planner here***
         // n.getParam("new_key_char", new_key_char);
+        n.getParam("reactive_key_char", reactive_key_char);
+        n.getParam("map_based_key_char", map_based_key_char);
 
         // Initialize the mux controller 
         n.getParam("mux_size", mux_size);
+
         mux_controller.reserve(mux_size);
         for (int i = 0; i < mux_size; i++) {
             mux_controller[i] = false;
@@ -344,6 +356,12 @@ public:
         } else if (msg.data == nav_key_char) {
             // nav
             toggle_mux(nav_mux_idx, "Navigation");
+        } elseif (mss.data == reactive_key_char) {
+            // reactive
+            toggle_mux(reactive_mux_idx, "Reactive");
+        } elseif (mss.data == map_based_key_char) {
+            // map based
+            toggle_mux(map_based_mux_idx, "Map Based");
         }
         // ***Add new else if statement here for new planning method***
         // if (msg.data == new_key_char) {
