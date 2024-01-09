@@ -23,11 +23,11 @@ mass: 3.47 # kg (measured on car 'lidart')
 moment_inertia: .04712 # kg m^2 (estimated as a rectangle with width and height of car and evenly distributed mass, then shifted to account for center of mass location)
 
 # The rate at which the pose and the lidar publish
-update_pose_rate: 0.001
+update_pose_rate: 0.01
 
 # Lidar simulation parameters
 scan_beams: 1080
-scan_field_of_view: 4.71239 # radians 270 degree
+scan_field_of_view: 4.71239  # radians
 
 
 # The distance from the center of the
@@ -47,16 +47,18 @@ map_free_threshold: 0.8
 ttc_threshold: 0.01
 
 # Indices for mux controller
-mux_size: 7
+mux_size: 8
 joy_mux_idx: 0
 key_mux_idx: 1
 random_walker_mux_idx: 2
 brake_mux_idx: 3
 nav_mux_idx: 4
+wall_follower_mux_idx: 5
+purepursuit_mux_idx: 6
+aeb_mux_idx: 7
 # **Add index for new planning method here**
 # **(increase mux_size accordingly)**
-reactive_mux_idx: 5
-map_based_mux_idx: 6
+new_method_mux_idx: -1
 
 # Enables joystick if true
 joy: true
@@ -64,26 +66,27 @@ joy: true
 joy_speed_axis: 1
 joy_angle_axis: 3
 joy_max_speed: 2. # meters/second
-
 # Joystick indices for toggling mux
 joy_button_idx: 4  # LB button
-key_button_idx: 6 # Back button
+key_button_idx: 6 # not sure 
 brake_button_idx: 0 # A button
 random_walk_button_idx: 1 # ? button
 nav_button_idx: 5 # RB button
+wall_follower_button_idx: 7
 # **Add button for new planning method here**
-reactive_button_idx: 7
-
+new_button_idx: -1
 
 # Keyboard characters for toggling mux
 joy_key_char: "j"
 keyboard_key_char: "k"
 brake_key_char: "b"
 random_walk_key_char: "r"
-# nav_key_char: "n"
+nav_key_char: "n"
+wall_follower_key_char: "z"
+purepursuit_key_char: "p"
+aeb_key_char: "e"
 # **Add button for new planning method here**
-reactive_key_char: "n"
-map_key_char: "m"
+# new_key_char: "z"
 
 # Keyboard driving params
 keyboard_speed: 1.8  # meters/second
@@ -93,6 +96,9 @@ keyboard_steer_ang: .3  # radians
 obstacle_size: 2
 
 # The names of topics to listen and publish to
+wall_follower_topic: "/reactive/wallfollower/ackermann_cmd"
+purepursuit_topic: "/purepursuit/ackermann_cmd"
+aeb_topic: "/reactive/emergency/ackermann_cmd"
 joy_topic: "/joy"
 drive_topic: "/drive"
 map_topic: "/map"
@@ -113,8 +119,6 @@ brake_drive_topic: "/brake"
 nav_drive_topic: "/nav"
 # **Add name for new planning method here**
 new_drive_topic: "/new_drive"
-reactive_drive_topic: "/reactive/wallfollower/ackermann_cmd"
-map_based_drive_topic: "/purepursuit/ackermann_cmd"
 
 # name of file to write collision log to 
 collision_file: "collision_file"

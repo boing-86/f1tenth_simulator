@@ -21,8 +21,9 @@ private:
     // Listen for messages from joystick and keyboard
     ros::Subscriber joy_sub;
     ros::Subscriber key_sub;
-    ros::Subscriber reactive_sub;
-    ros::Subscriber map_based_sub;
+    ros::Subscriber wall_follower_sub;
+    ros::Subscriber purepursuit_sub;
+    ros::Subscriber aeb_sub;
 
     // Publish drive data to simulator/car
     ros::Publisher drive_pub;
@@ -30,8 +31,9 @@ private:
     // Mux indices
     int joy_mux_idx;
     int key_mux_idx;
-    int reactive_mux_idx;
-    int map_based_mux_idx;
+    int wall_follower_mux_idx;
+    int purepursuit_mux_idx;
+    int aeb_mux_idx;
 
     // Mux controller array
     std::vector<bool> mux_controller;
@@ -62,13 +64,14 @@ public:
 
         // get topic names
         std::string drive_topic, mux_topic, joy_topic, key_topic;
-        std::string reactive_topic, map_based_topic;
+        std::string wall_follower_topic, purepursuit_topic, aeb_topic;
         n.getParam("drive_topic", drive_topic);
         n.getParam("mux_topic", mux_topic);
         n.getParam("joy_topic", joy_topic);
         n.getParam("keyboard_topic", key_topic);
-        n.getParam("reactive_topic", reactive_topic);
-        n.getParam("map_based_topic", map_based_topic);
+        n.getParam("wall_follower_topic", wall_follower_topic);
+        n.getParam("purepursuit_topic", purepursuit_topic);
+        n.getParam("aeb_topic", aeb_topic);
 
         // Make a publisher for drive messages
         drive_pub = n.advertise<ackermann_msgs::AckermannDriveStamped>(drive_topic, 10);
@@ -79,15 +82,16 @@ public:
         // Start subscribers to listen to joy and keyboard messages
         joy_sub = n.subscribe(joy_topic, 1, &Mux::joy_callback, this);
         key_sub = n.subscribe(key_topic, 1, &Mux::key_callback, this);
-
-        reactive_sub = n.subscribe(reactive_topic, 1, &Mux::reactive_callback, this);
-        map_based_sub = n.subscribe(map_based_topic, 1, &Mux::map_based_callback, this);
+        wall_follower_sub = n.subscribe(wall_follower_topic, 1, &Mux::wall_follower_callback, this);
+        purepursuit_sub = n.subscribe(purepursuit_topic, 1, &Mux::purepursuit_callback, this);
+        aeb_sub = n.subscribe(aeb_topic, 1, &Mux::aeb_callback, this);
 
         // get mux indices
         n.getParam("joy_mux_idx", joy_mux_idx);
         n.getParam("key_mux_idx", key_mux_idx);
-        n.getParam("reactive_mux_idx", reactive_mux_idx);
-        n.getParam("map_based_mux_idx", map_based_mux_idx);
+        n.getParam("wall_follower_mux_idx", wall_follower_mux_idx);
+	    n.getParam("purepursuit_mux_idx", purepursuit_mux_idx);
+        n.getParam("aeb_mux_idx", aeb_mux_idx);
 
         // get params for joystick calculations
         n.getParam("joy_speed_axis", joy_speed_axis);
@@ -134,24 +138,28 @@ public:
         n.getParam("nav_drive_topic", nav_drive_topic);
         n.getParam("nav_mux_idx", nav_mux_idx);
         add_channel(nav_drive_topic, drive_topic, nav_mux_idx);
+	
+        int wall_follower_mux_idx;
+        n.getParam("wall_follower_topic", wall_follower_topic);
+        n.getParam("wall_follower_mux_idx", wall_follower_mux_idx);
+        add_channel(wall_follower_topic, drive_topic, wall_follower_mux_idx);
 
+        int purepursuit_mux_idx;
+        n.getParam("purepursuit_topic", purepursuit_topic);
+        n.getParam("purepursuit_mux_idx", purepursuit_mux_idx);
+        add_channel(purepursuit_topic, drive_topic, purepursuit_mux_idx);
+
+        int aeb_mux_idx;
+        n.getParam("aeb_topic", aeb_topic);
+        n.getParam("aeb_mux_idx", aeb_mux_idx);
+        add_channel(aeb_topic, drive_topic, aeb_mux_idx);
+        
         // ***Add a channel for a new planner here**
         // int new_mux_idx;
         // std::string new_drive_topic;
         // n.getParam("new_drive_topic", new_drive_topic);
         // n.getParam("new_mux_idx", new_mux_idx);
         // add_channel(new_drive_topic, drive_topic, new_mux_idx);
-
-        int reactive_mux_idx;
-        n.getParam("reactive_drive_topic", reactive_drive_topic);
-        n.getParam("reactive_mux_idx", reactive_mux_idx);
-        add_channel(reactive_drive_topic, drive_topic, reactive_mux_idx);
-
-        int map_based_mux_idx;
-        n.getParam("map_based_drive_topic", map_based_drive_topic);
-        n.getParam("map_based_mux_idx", map_based_mux_idx);
-        add_channel(map_based_drive_topic, drive_topic, map_based_mux_idx);
-
     }
 
     void add_channel(std::string channel_name, std::string drive_topic, int mux_idx_) {
@@ -208,20 +216,27 @@ public:
         }
     }
 
-    void reactive_callback(const ackermann_msgs::AckermannDriveStamped & msg) {
-
-        if (mux_controller[reactive_mux_idx]) {
-            ROS_INFO_STREAM("reactive_method callback");
+    void aeb_callback(const ackermann_msgs::AckermannDriveStamped & msg) {
+        // make drive message from joystick if turned on
+        if (mux_controller[aeb_mux_idx]) {
+            ROS_INFO_STREAM("emergency brake callback");
             publish_to_drive(msg.drive.speed, msg.drive.steering_angle);
         }
     }
 
-    void map_based_callback(const ackermann_msgs::AckermannDriveStamped & msg) {
-
-        if (mux_controller[map_based_mux_idx]) {
-            ROS_INFO_STREAM("map based method callback");
+    void wall_follower_callback(const ackermann_msgs::AckermannDriveStamped & msg) {
+        // make drive message from joystick if turned on
+        if (mux_controller[wall_follower_mux_idx]) {
+            ROS_INFO_STREAM("wall follower callback");
             publish_to_drive(msg.drive.speed, msg.drive.steering_angle);
         }
+    }
+
+    void purepursuit_callback(const ackermann_msgs::AckermannDriveStamped & msg) {
+        if(mux_controller[purepursuit_mux_idx]){
+                ROS_INFO_STREAM("purepursuit callback");
+                publish_to_drive(msg.drive.speed, msg.drive.steering_angle);
+            }
     }
 
     void joy_callback(const sensor_msgs::Joy & msg) {

@@ -38,10 +38,11 @@ private:
     int random_walker_mux_idx;
     int nav_mux_idx;
     int brake_mux_idx;
+    int wall_follower_mux_idx;
+    int purepursuit_mux_idx;
+    int aeb_mux_idx;
     // ***Add mux index for new planner here***
     // int new_mux_idx;
-    int reactive_mux_idx;
-    int map_based_mux_idx;
 
     // Mux controller array
     std::vector<bool> mux_controller;
@@ -53,6 +54,7 @@ private:
     int random_walk_button_idx;
     int brake_button_idx;
     int nav_button_idx;
+    int wall_follower_button_idx;
     // ***Add button index for new planner here***
     // int new_button_idx;
 
@@ -62,10 +64,11 @@ private:
     std::string brake_key_char;
     std::string random_walk_key_char;
     std::string nav_key_char;
+    std::string wall_follower_key_char;
+    std::string purepursuit_key_char;
+    std::string aeb_key_char;
     // ***Add key char for new planner here***
     // int new_key_char;
-    std::string reactive_key_char;
-    std::string map_based_key_char;
 
     // Is ebrake on? (not engaged, but on)
     bool safety_on;
@@ -96,7 +99,7 @@ public:
 
         // get topic names
         std::string scan_topic, odom_topic, imu_topic, joy_topic, keyboard_topic, brake_bool_topic, mux_topic;
-        std::string reactive_topic, map_based_topic;
+        std::string wall_follower_topic, purepursuit_topic, aeb_topic;
         n.getParam("scan_topic", scan_topic);
         n.getParam("odom_topic", odom_topic);
         n.getParam("imu_topic", imu_topic);
@@ -104,8 +107,10 @@ public:
         n.getParam("mux_topic", mux_topic);
         n.getParam("keyboard_topic", keyboard_topic);
         n.getParam("brake_bool_topic", brake_bool_topic);
-        n.getParam("reactive_topic", reactive_topic);
-        n.getParam("map_based_topic", map_based_topic);
+        n.getParam("wall_follower_topic", wall_follower_topic);
+        n.getParam("purepursuit_topic", purepursuit_topic);	
+        n.getParam("aeb_topic", aeb_topic);
+
 
         // Make a publisher for mux messages
         mux_pub = n.advertise<std_msgs::Int32MultiArray>(mux_topic, 10);
@@ -118,16 +123,19 @@ public:
         key_sub = n.subscribe(keyboard_topic, 1, &BehaviorController::key_callback, this);
         brake_bool_sub = n.subscribe(brake_bool_topic, 1, &BehaviorController::brake_callback, this);
 
+
         // Get mux indices
         n.getParam("joy_mux_idx", joy_mux_idx);
         n.getParam("key_mux_idx", key_mux_idx);
         n.getParam("random_walker_mux_idx", random_walker_mux_idx);
         n.getParam("brake_mux_idx", brake_mux_idx);
         n.getParam("nav_mux_idx", nav_mux_idx);
+        n.getParam("wall_follower_mux_idx", wall_follower_mux_idx);
+        n.getParam("purepursuit_mux_idx", purepursuit_mux_idx);
+        n.getParam("aeb_mux_idx", aeb_mux_idx);
+
         // ***Add mux index for new planner here***
         // n.getParam("new_mux_idx", new_mux_idx);
-        n.getParam("reactive_mux_idx", reactive_mux_idx);
-        n.getParam("map_based_mux_idx", map_based_mux_idx);
 
         // Get button indices
         n.getParam("joy_button_idx", joy_button_idx);
@@ -135,6 +143,7 @@ public:
         n.getParam("random_walk_button_idx", random_walk_button_idx);
         n.getParam("brake_button_idx", brake_button_idx);
         n.getParam("nav_button_idx", nav_button_idx);
+        n.getParam("wall_follower_button_idx", wall_follower_button_idx);
         // ***Add button index for new planner here***
         // n.getParam("new_button_idx", new_button_idx);
 
@@ -144,14 +153,14 @@ public:
         n.getParam("random_walk_key_char", random_walk_key_char);
         n.getParam("brake_key_char", brake_key_char);
         n.getParam("nav_key_char", nav_key_char);
+        n.getParam("wall_follower_key_char", wall_follower_key_char);
+        n.getParam("purepursuit_key_char", purepursuit_key_char);
+        n.getParam("aeb_key_char", aeb_key_char);
         // ***Add key char for new planner here***
         // n.getParam("new_key_char", new_key_char);
-        n.getParam("reactive_key_char", reactive_key_char);
-        n.getParam("map_based_key_char", map_based_key_char);
 
         // Initialize the mux controller 
         n.getParam("mux_size", mux_size);
-
         mux_controller.reserve(mux_size);
         for (int i = 0; i < mux_size; i++) {
             mux_controller[i] = false;
@@ -324,6 +333,11 @@ public:
             // nav
             toggle_mux(nav_mux_idx, "Navigation");
         }
+
+        else if (msg.buttons[wall_follower_button_idx]) {
+            // wall follower
+            toggle_mux(wall_follower_mux_idx, "Wall Follower");
+        }
         // ***Add new else if statement here for new planning method***
         // if (msg.buttons[new_button_idx]) {
         //  // new planner
@@ -356,13 +370,14 @@ public:
         } else if (msg.data == nav_key_char) {
             // nav
             toggle_mux(nav_mux_idx, "Navigation");
-        } else if (msg.data == reactive_key_char) {
-            // reactive
-            toggle_mux(reactive_mux_idx, "Reactive");
-        } else if (msg.data == map_based_key_char) {
-            // map based
-            toggle_mux(map_based_mux_idx, "Map Based");
-        }
+        } else if (msg.data == wall_follower_key_char) {
+            // wall follower
+            toggle_mux(wall_follower_mux_idx, "Wall Follower");
+        } else if (msg.data == purepursuit_key_char) {
+            toggle_mux(purepursuit_mux_idx, "Purepursuit Follower");
+	    } else if (msg.data == aeb_key_char) {
+            toggle_mux(aeb_mux_idx, "emergency brake");
+	    }
         // ***Add new else if statement here for new planning method***
         // if (msg.data == new_key_char) {
         //  // new planner
